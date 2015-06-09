@@ -5,6 +5,9 @@ This extension allows your site to have 'monthly archives' or 'yearly
 archives', which are used often on blog-like websites, or to organize a larger
 archive of newsitems. This extension takes care of creating the 'list of links', as well as populating the actual archive pages.
 
+![screen shot 2015-06-09 at 17 02 31](https://cloud.githubusercontent.com/assets/1833361/8061177/e85322b0-0ec9-11e5-94a8-839192f92ff8.png)
+
+
 To use, place the following tag in your template, where you'd like the list of links:
 
 ```
