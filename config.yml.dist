@@ -1,0 +1,6 @@
+# Set the template to use for the listing pages. Leave this blank, if you'd like
+# to use the default 'listing template' as defined in the theme of your global config.
+template: ''
+
+# The prefix to use for the URL's, like 'archives/entries/2015-06'
+prefix: 'archives'

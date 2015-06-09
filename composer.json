@@ -1,0 +1,27 @@
+{
+    "name": "bobdenotter/archives",
+    "description": "This extension allows your site to have 'monthly archives' or 'yearly archives', which are used often on blog-like websites.",
+    "type": "bolt-extension",
+    "require": {
+        "bolt/bolt": ">=2.2.0,<3.0.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bob den Otter",
+            "email": "bob@twokings.nl"
+        }
+    ],
+    "autoload": {
+        "files": [
+            "init.php"
+        ],
+        "psr-4": {
+            "Bolt\\Extension\\Bobdenotter\\Archives\\": ""
+        }
+    },
+
+    "extra": {
+        "bolt-assets": "assets"
+    }
+}
