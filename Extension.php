@@ -30,12 +30,12 @@ class Extension extends BaseExtension
         return "Yearly & Monthly Archives";
     }
 
-    public function yearlyArchives($contenttypeslug, $order = '', $label = '%Y', $column = 'datepublish') {
+    public function yearlyArchives($contenttypeslug, $order = '', $label = '%Y', $column = '') {
         return $this->archiveHelper($contenttypeslug, $order, 4, $label, $column);
     }
 
 
-    public function monthlyArchives($contenttypeslug, $order = '', $label = '%B %Y', $column = 'datepublish') {
+    public function monthlyArchives($contenttypeslug, $order = '', $label = '%B %Y', $column = '') {
         return $this->archiveHelper($contenttypeslug, $order, 7, $label, $column);
     }
 
@@ -53,7 +53,13 @@ class Extension extends BaseExtension
             $order = 'desc';
         }
 
-        $query = "SELECT LEFT(" . $column . ", $length) AS year FROM $tablename GROUP BY year ORDER BY year $order;";
+        if (!empty($this->config['columns'][$contenttypeslug])) {
+            $column = $this->config['columns'][$contenttypeslug];
+        } else if (empty($column)) {
+            $column = 'datepublish';
+        }
+
+        $query = "SELECT LEFT($column, $length) AS year FROM $tablename GROUP BY year ORDER BY year $order;";
         $statement = $this->app['db']->executeQuery($query);
         $rows = $statement->fetchAll();
 
@@ -106,8 +112,14 @@ class Extension extends BaseExtension
 
         $tablename = $this->app['storage']->getContenttypeTablename($contenttype);
 
+        if (!empty($this->config['columns'][$contenttypeslug])) {
+            $column = $this->config['columns'][$contenttypeslug];
+        } else if (empty($column)) {
+            $column = 'datepublish';
+        }
+
         // Use a custom query to fetch the ids.
-        $query = "SELECT id FROM $tablename WHERE datepublish like '$period%';";
+        $query = "SELECT id FROM $tablename WHERE $column like '$period%';";
         $statement = $this->app['db']->executeQuery($query);
         $temp_ids = $statement->fetchAll();
 
@@ -143,11 +155,4 @@ class Extension extends BaseExtension
 
     }
 
-
 }
-
-
-
-
-
-
