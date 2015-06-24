@@ -27,3 +27,19 @@ or
 
 The parameter passed, is the contenttype that's used for the archives. Be sure to pass this as a strings, _with_ the quotes. The second parameter can de `'asc'` or `'desc'`, and determines whether the results will be shown ascending (oldest first) or descending (newest first).
 
+You can also pass the name of the column to sort on and/or the label to use. By this point, it becomes better to use named arguments for clarity.
+
+```
+<h3>Monthly calendar</h3>
+<ul class='archive_list'>
+    {{ monthly_archives(contenttypeslug = 'entries', order = 'asc', column = 'start_date') }}
+</ul>
+
+
+<h3>Monthly news archives</h3>
+<ul class='archive_list'>
+    {{ monthly_archives(contenttypeslug = 'entries', label = 'In the month %B of %Y.') }}
+</ul>
+
+```
+
