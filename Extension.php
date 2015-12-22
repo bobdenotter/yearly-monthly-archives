@@ -66,6 +66,12 @@ class Extension extends BaseExtension
         $output = '';
 
         foreach($rows as $row) {
+            
+            // Don't print out links for records without dates.
+            if (in_array($row['year'], ['0000', '0000-00', null])) {
+                continue;
+            }
+            
             $link = $this->app['url_generator']->generate(
                     'archiveList',
                     array('contenttypeslug' => $contenttype['slug'], 'period' => $row['year'])
