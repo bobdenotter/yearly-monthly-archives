@@ -59,7 +59,7 @@ class Extension extends BaseExtension
             $column = 'datepublish';
         }
 
-        $query = "SELECT LEFT($column, $length) AS year FROM $tablename GROUP BY year ORDER BY year $order;";
+        $query = "SELECT SUBSTR($column, 0, $length) AS year FROM $tablename GROUP BY year ORDER BY year $order;";
         $statement = $this->app['db']->executeQuery($query);
         $rows = $statement->fetchAll();
 
