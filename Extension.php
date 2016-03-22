@@ -142,6 +142,10 @@ class Extension extends BaseExtension
                 array('id' => implode(' || ', $ids))
             );
 
+        if (!is_array($records)) {
+            $records = array($records);
+        }
+
         // Get the correct template
         if (!empty($this->config['template'])) {
             $template = $this->config['template'];
