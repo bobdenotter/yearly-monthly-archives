@@ -31,12 +31,12 @@ class Extension extends BaseExtension
     }
 
     public function yearlyArchives($contenttypeslug, $order = '', $label = '%Y', $column = '') {
-        return $this->archiveHelper($contenttypeslug, $order, 4, $label, $column);
+        return $this->archiveHelper($contenttypeslug, $order, 5, $label, $column);
     }
 
 
     public function monthlyArchives($contenttypeslug, $order = '', $label = '%B %Y', $column = '') {
-        return $this->archiveHelper($contenttypeslug, $order, 7, $label, $column);
+        return $this->archiveHelper($contenttypeslug, $order, 8, $label, $column);
     }
 
     private function archiveHelper($contenttypeslug, $order, $length, $label, $column)
