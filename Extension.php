@@ -4,6 +4,7 @@ namespace Bolt\Extension\Bobdenotter\Archives;
 
 use Bolt\Application;
 use Bolt\BaseExtension;
+use Doctrine\DBAL\Platforms\MySqlPlatform;
 
 class Extension extends BaseExtension
 {
@@ -59,7 +60,14 @@ class Extension extends BaseExtension
             $column = 'datepublish';
         }
 
-        $query = "SELECT SUBSTR($column, 0, $length) AS year FROM $tablename GROUP BY year ORDER BY year $order;";
+        $index = 0;
+        // MySql uses 1-indexed strings instead of 0-indexed strings. Make adjustments for their wonky implementation of SUBSTR(...)
+        if ($this->app['db']->getDatabasePlatform() instanceof MySqlPlatform) {
+            $index = 1;
+            $length -= 1;
+        }
+
+        $query = "SELECT SUBSTR($column, $index, $length) AS year FROM $tablename GROUP BY year ORDER BY year $order;";
         $statement = $this->app['db']->executeQuery($query);
         $rows = $statement->fetchAll();
 
