@@ -3,7 +3,7 @@
     "description": "This extension allows your site to have 'monthly archives' or 'yearly archives', which are used often on blog-like websites.",
     "type": "bolt-extension",
     "require": {
-        "bolt/bolt": ">=2.2.0,<3.0.0"
+        "bolt/bolt": "^3.0.0"
     },
     "license": "MIT",
     "authors": [
@@ -13,11 +13,11 @@
         }
     ],
     "autoload": {
-        "files": [
-            "init.php"
-        ],
         "psr-4": {
-            "Bolt\\Extension\\Bobdenotter\\Archives\\": ""
+            "Bolt\\Extension\\Bobdenotter\\Archives\\": "src"
         }
+    },
+    "extra": {
+        "bolt-class": "Bolt\\Extension\\Bobdenotter\\Archives\\ArchivesExtension"
     }
 }
