@@ -11,3 +11,11 @@ ucwords: true
 # Set the column to use for filtering / sorting for specific contenttypes.
 columns:
     agenda: date_start
+
+widgets:
+  entries:
+    location: aside_top
+    type: monthly
+    priority: 100
+    header: "Monthly archives"
+

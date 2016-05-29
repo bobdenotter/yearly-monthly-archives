@@ -47,20 +47,24 @@ class ArchivesExtension extends SimpleExtension
             if (!isset($widget['order'])) {
                 $widget['order'] = '';
             }
+            if (!isset($widget['header'])) {
+                $widget['header'] = '';
+            }
 
             $widgetObj = new Widget();
             $widgetObj
                 ->setZone('frontend')
                 ->setLocation($widget['location'])
                 ->setCallback([$this, 'widget'])
-                ->setCacheDuration(300)
+                ->setCacheDuration(0)
                 ->setCallbackArguments([
                     'type' => $widget['type'],
                     'contenttypeslug' => $contenttypeslug,
                     'order' => $widget['order'],
                     'label' => $widget['label'],
-                    'column' => $widget['column']]
-                );
+                    'column' => $widget['column'],
+                    'header' => $widget['header']
+                ]);
 
             if (isset($widget['priority'])) {
                 $widgetObj->setPriority($widget['priority']);
@@ -72,7 +76,7 @@ class ArchivesExtension extends SimpleExtension
         return $widgets;
     }
 
-    public function widget($type, $contenttypeslug, $order, $label, $column)
+    public function widget($type, $contenttypeslug, $order, $label, $column, $header)
     {
         if ($type == 'monthly') {
             if (empty($label)) {
@@ -86,9 +90,12 @@ class ArchivesExtension extends SimpleExtension
             $html = $this->yearlyArchives($contenttypeslug, $order, $label, $column);
         }
 
+        if (!empty($header)) {
+            $html = sprintf("<h5>%s</h5>\n%s", $header, $html);
+        }
+
         return $html;
     }
-
 
     public function yearlyArchives($contenttypeslug, $order = '', $label = '%Y', $column = '')
     {
@@ -164,7 +171,6 @@ class ArchivesExtension extends SimpleExtension
         return new \Twig_Markup($output, 'UTF-8');
     }
 
-
     public function archiveList($contenttypeslug, $period)
     {
         $app = $this->getContainer();
@@ -225,8 +231,9 @@ class ArchivesExtension extends SimpleExtension
             $template = $app['templatechooser']->listing($contenttype);
         }
 
-        // Make sure we can also access it as {{ pages }} for pages, etc. We set these in the global scope,
-        // So that they're also available in menu's and templates rendered by extensions.
+        // Make sure we can also access it as {{ pages }} for pages, etc. We set
+        // these in the global scope, so that they're also available in menu's
+        // and templates rendered by extensions.
         $globals = [
             'records'            => $records,
             $contenttype['slug'] => $records,
@@ -234,7 +241,6 @@ class ArchivesExtension extends SimpleExtension
         ];
 
         return $app['render']->render($template, [], $globals);
-
     }
 
 }
