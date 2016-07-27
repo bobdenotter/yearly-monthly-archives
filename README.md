@@ -43,6 +43,6 @@ You can also pass the name of the column to sort on and/or the label to use. By 
 
 ```
 
-Note: In most cases you do _not_ want to set `column` in the twig tag, but rather in `archives.bobdenotter.yml`, because that way it'll automatically work on the listing pages as well. 
+Note: In most cases you do _not_ want to set `column` in the twig tag, but rather in `app/config/extensions/archives.bobdenotter.yml`, because that way it'll automatically work on the listing pages as well. 
 
 
