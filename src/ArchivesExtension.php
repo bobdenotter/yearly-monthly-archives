@@ -2,22 +2,21 @@
 
 namespace Bolt\Extension\Bobdenotter\Archives;
 
+use Bolt\Asset\Widget\Widget;
 use Bolt\Extension\SimpleExtension;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
-use Silex\ControllerCollection;
 
-use Bolt\Asset\Widget\Widget;
+use Silex\ControllerCollection;
 
 class ArchivesExtension extends SimpleExtension
 {
-
     /**
      * Set up routing and Twig functions..
      */
     protected function registerTwigFunctions()
     {
         return [
-            'yearly_archives' => 'yearlyArchives',
+            'yearly_archives'  => 'yearlyArchives',
             'monthly_archives' => 'monthlyArchives',
         ];
     }
@@ -28,7 +27,7 @@ class ArchivesExtension extends SimpleExtension
 
         $prefix = !empty($config['prefix']) ? $config['prefix'] : 'archives';
 
-        $collection->get("/" . $prefix . "/{contenttypeslug}/{period}", array($this, 'archiveList'))->bind('archiveList');
+        $collection->get('/' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])->bind('archiveList');
     }
 
     protected function registerAssets()
@@ -37,7 +36,6 @@ class ArchivesExtension extends SimpleExtension
         $config = $this->getConfig();
 
         foreach ((array) $config['widgets'] as $contenttypeslug => $widget) {
-
             if (!isset($widget['label'])) {
                 $widget['label'] = '';
             }
@@ -58,12 +56,12 @@ class ArchivesExtension extends SimpleExtension
                 ->setCallback([$this, 'widget'])
                 ->setCacheDuration(0)
                 ->setCallbackArguments([
-                    'type' => $widget['type'],
+                    'type'            => $widget['type'],
                     'contenttypeslug' => $contenttypeslug,
-                    'order' => $widget['order'],
-                    'label' => $widget['label'],
-                    'column' => $widget['column'],
-                    'header' => $widget['header']
+                    'order'           => $widget['order'],
+                    'label'           => $widget['label'],
+                    'column'          => $widget['column'],
+                    'header'          => $widget['header'],
                 ]);
 
             if (isset($widget['priority'])) {
@@ -126,7 +124,7 @@ class ArchivesExtension extends SimpleExtension
 
         if (!empty($config['columns'][$contenttypeslug])) {
             $column = $config['columns'][$contenttypeslug];
-        } else if (empty($column)) {
+        } elseif (empty($column)) {
             $column = 'datepublish';
         }
 
@@ -143,7 +141,7 @@ class ArchivesExtension extends SimpleExtension
 
         $output = '';
 
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
 
             // Don't print out links for records without dates.
             if (in_array($row['year'], ['0000', '0000-00', null])) {
@@ -152,10 +150,10 @@ class ArchivesExtension extends SimpleExtension
 
             $link = $app['url_generator']->generate(
                     'archiveList',
-                    array('contenttypeslug' => $contenttype['slug'], 'period' => $row['year'])
+                    ['contenttypeslug' => $contenttype['slug'], 'period' => $row['year']]
                 );
 
-            $period = strftime($label, strtotime($row['year'].'-01'));
+            $period = strftime($label, strtotime($row['year'] . '-01'));
 
             if ($config['ucwords'] == true) {
                 $period = ucwords($period);
@@ -191,6 +189,7 @@ class ArchivesExtension extends SimpleExtension
         // If the contenttype is 'viewless', don't show the record page.
         if (isset($contenttype['viewless']) && $contenttype['viewless'] === true) {
             $this->abort(Response::HTTP_NOT_FOUND, "Page $contenttypeslug not found.");
+
             return null;
         }
 
@@ -198,7 +197,7 @@ class ArchivesExtension extends SimpleExtension
 
         if (!empty($config['columns'][$contenttypeslug])) {
             $column = $config['columns'][$contenttypeslug];
-        } else if (empty($column)) {
+        } elseif (empty($column)) {
             $column = 'datepublish';
         }
 
@@ -209,7 +208,7 @@ class ArchivesExtension extends SimpleExtension
 
         $ids = [];
 
-        foreach($temp_ids as $temp_id) {
+        foreach ($temp_ids as $temp_id) {
             $ids[] = $temp_id['id'];
         }
 
@@ -217,11 +216,11 @@ class ArchivesExtension extends SimpleExtension
         // allows us to keep the sorting intact, as well as skip unpublished records.
         $records = $app['storage']->getContent(
                 $contenttype['slug'],
-                array('id' => implode(' || ', $ids))
+                ['id' => implode(' || ', $ids)]
             );
 
         if (!is_array($records)) {
-            $records = array($records);
+            $records = [$records];
         }
 
         // Get the correct template
@@ -237,10 +236,9 @@ class ArchivesExtension extends SimpleExtension
         $globals = [
             'records'            => $records,
             $contenttype['slug'] => $records,
-            'contenttype'        => $contenttype['name']
+            'contenttype'        => $contenttype['name'],
         ];
 
         return $app['render']->render($template, [], $globals);
     }
-
 }
