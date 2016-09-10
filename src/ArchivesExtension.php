@@ -77,13 +77,14 @@ class ArchivesExtension extends SimpleExtension
      * Archive listing route.
      *
      * @param Application $app
-     * @param string      $contentTypeName
+     * @param string      $contenttypeslug
      * @param integer     $period
      *
      * @return string
      */
-    public function archiveList(Application $app, $contentTypeName, $period)
+    public function archiveList(Application $app, $contenttypeslug, $period)
     {
+        $contentTypeName = $contenttypeslug;
         // Scrub, scrub.
         $period = preg_replace('/[^0-9-]+/', '', $period);
         if (strlen($period) !== 4 && strlen($period) !== 7) {
@@ -156,7 +157,7 @@ class ArchivesExtension extends SimpleExtension
         $prefix = !empty($config['prefix']) ? $config['prefix'] : 'archives';
 
         $collection
-            ->get('/' . $prefix . '/{contentTypeName}/{period}', [$this, 'archiveList'])
+            ->get('/' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
             ->bind('archiveList')
         ;
     }
@@ -284,7 +285,7 @@ class ArchivesExtension extends SimpleExtension
 
             $link = $app['url_generator']->generate(
                 'archiveList',
-                ['contentTypeName' => $contentTypeName, 'period' => $row['year']]
+                ['contenttypeslug' => $contentTypeName, 'period' => $row['year']]
             );
             $period = strftime($label, strtotime($row['year'] . '-01'));
             if ($config['ucwords'] === true) {
