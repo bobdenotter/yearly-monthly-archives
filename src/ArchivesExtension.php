@@ -269,18 +269,13 @@ class ArchivesExtension extends SimpleExtension
             $index = 1;
             $length -= 1;
         }
-        $query = $app['db']->createQueryBuilder()
-            ->select('SUBSTR(:column, :index, :length) as year')
+
+        $query = $app['db']->createQueryBuilder();
+        $query
+            ->select('SUBSTR(' . $query->expr()->literal($column) . ", $index, $length) as year")
             ->from($tablename)
             ->groupBy('year')
-            ->orderBy('year')
-            ->addOrderBy(':order')
-            ->setParameters([
-                'column' => $column,
-                'index'  => $index,
-                'length' => $length,
-                'order'  => $order,
-            ])
+            ->orderBy('year', $order)
         ;
         $statement = $app['db']->executeQuery($query);
         $rows = $statement->fetchAll();
