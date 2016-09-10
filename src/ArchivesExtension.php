@@ -3,6 +3,7 @@
 namespace Bolt\Extension\Bobdenotter\Archives;
 
 use Bolt\Asset\Widget\Widget;
+use Bolt\Exception\InvalidRepositoryException;
 use Bolt\Extension\SimpleExtension;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Silex\Application;
@@ -89,11 +90,12 @@ class ArchivesExtension extends SimpleExtension
             return 'Wrong period parameter';
         }
 
-        $contentType = $app['storage']->getContenttype($contentTypeName);
-
-        if (empty($contentType)) {
-            return 'Not a valid contenttype';
+        try {
+            $repo = $app['storage']->getRepository($contentTypeName);
+        } catch (InvalidRepositoryException $e) {
+            return 'Not a valid ContentType';
         }
+        $contentType = $app['storage']->getContenttype($contentTypeName);
 
         // If the contenttype is 'viewless', don't show the record page.
         if (isset($contentType['viewless']) && $contentType['viewless'] === true) {
@@ -102,8 +104,6 @@ class ArchivesExtension extends SimpleExtension
             return null;
         }
 
-        $tableName = $app['storage']->getContenttypeTablename($contentType);
-
         if (!empty($config['columns'][$contentTypeName])) {
             $column = $config['columns'][$contentTypeName];
         } elseif (empty($column)) {
@@ -111,15 +111,12 @@ class ArchivesExtension extends SimpleExtension
         }
 
         // Use a custom query to fetch the ids.
-        $query = $app['db']->createQueryBuilder();
+        $query = $repo->createQueryBuilder();
         $query
-            ->select('id')
-            ->from($tableName)
             ->where($query->expr()->like($column, $query->expr()->literal($period . '%')));
-
         ;
-        $statement = $app['db']->executeQuery($query);
-        $temp_ids = $statement->fetchAll();
+        //$records = $query->execute()->fetchAll() ?: [];
+        $temp_ids = $query->execute()->fetchAll() ?: [];
         $ids = [];
         foreach ($temp_ids as $temp_id) {
             $ids[] = $temp_id['id'];
@@ -139,13 +136,14 @@ class ArchivesExtension extends SimpleExtension
         // Make sure we can also access it as {{ pages }} for pages, etc. We set
         // these in the global scope, so that they're also available in menu's
         // and templates rendered by extensions.
-        $globals = [
-            'records'            => $records,
-            $contentType['slug'] => $records,
-            'contenttype'        => $contentType['name'],
+        $context = [
+            'records'        => $records,
+            $contentTypeName => $records,
+            'contenttype'    => $contentType['name'],
         ];
+        $html = $app['render']->render($template, [], $context);
 
-        return $app['render']->render($template, [], $globals);
+        return $html;
     }
 
     /**
@@ -215,8 +213,8 @@ class ArchivesExtension extends SimpleExtension
     protected function registerTwigFunctions()
     {
         return [
-            'yearly_archives'  => 'yearlyArchives',
-            'monthly_archives' => 'monthlyArchives',
+            'yearly_archives'  => ['yearlyArchives',  ['is_safe' => ['html']]],
+            'monthly_archives' => ['monthlyArchives', ['is_safe' => ['html']]],
         ];
     }
 
@@ -246,13 +244,14 @@ class ArchivesExtension extends SimpleExtension
     {
         $app = $this->getContainer();
         $config = $this->getConfig();
+        $output = '';
 
-        $contenttype = $app['storage']->getContenttype($contentTypeName);
-        if (empty($contenttype)) {
-            return 'Not a valid contenttype';
+        try {
+            $repo = $app['storage']->getRepository($contentTypeName);
+        } catch (InvalidRepositoryException $e) {
+            return 'Not a valid ContentType';
         }
 
-        $tablename = $app['storage']->getContenttypeTablename($contenttype);
         if (strtolower($order) !== 'asc') {
             $order = 'desc';
         }
@@ -270,17 +269,13 @@ class ArchivesExtension extends SimpleExtension
             $length -= 1;
         }
 
-        $query = $app['db']->createQueryBuilder();
+        $query = $repo->createQueryBuilder();
         $query
-            ->select('SUBSTR(' . $query->expr()->literal($column) . ", $index, $length) as year")
-            ->from($tablename)
+            ->select("SUBSTR($column, $index, $length) as year")
             ->groupBy('year')
             ->orderBy('year', $order)
         ;
-        $statement = $app['db']->executeQuery($query);
-        $rows = $statement->fetchAll();
-
-        $output = '';
+        $rows = $query->execute()->fetchAll();
         foreach ($rows as $row) {
             // Don't print out links for records without dates.
             if (in_array($row['year'], ['0000', '0000-00', null])) {
@@ -289,14 +284,14 @@ class ArchivesExtension extends SimpleExtension
 
             $link = $app['url_generator']->generate(
                 'archiveList',
-                ['contenttypeslug' => $contenttype['slug'], 'period' => $row['year']]
+                ['contentTypeName' => $contentTypeName, 'period' => $row['year']]
             );
             $period = strftime($label, strtotime($row['year'] . '-01'));
             if ($config['ucwords'] === true) {
                 $period = ucwords($period);
             }
 
-            $output .= sprintf('<li><a href="%s">%s</a></li>\n', $link, $period);
+            $output .= sprintf('<li><a href="%s">%s</a></li>%s', $link, $period, "\n");
         }
 
         return new \Twig_Markup($output, 'UTF-8');
