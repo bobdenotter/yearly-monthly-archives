@@ -84,6 +84,7 @@ class ArchivesExtension extends SimpleExtension
      */
     public function archiveList(Application $app, $contenttypeslug, $period)
     {
+        $config = $this->getConfig();
         $contentTypeName = $contenttypeslug;
         // Scrub, scrub.
         $period = preg_replace('/[^0-9-]+/', '', $period);
@@ -125,7 +126,11 @@ class ArchivesExtension extends SimpleExtension
 
         // Fetch the records, based on the ids we gathered earlier. Doing it this way
         // allows us to keep the sorting intact, as well as skip unpublished records.
-        $records = (array) $app['storage']->getContent($contentType['slug'], ['id' => implode(' || ', $ids)]);
+        $records = $app['storage']->getContent($contentType['slug'], ['id' => implode(' || ', $ids)]);
+        
+        if (count($records) === 1) {
+            $records = [$records];
+        }
 
         // Get the correct template
         if (!empty($config['template'])) {
