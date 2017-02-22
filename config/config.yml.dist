@@ -2,7 +2,8 @@
 # to use the default 'listing template' as defined in the theme of your global config.
 template: ''
 
-# The prefix to use for the URL's, like 'archives/entries/2015-06'
+# The prefix to use for the URL's, like 'archives/entries/2015-06'.
+# If you don't wish to have a prefix, enter '/'.
 prefix: 'archives'
 
 # Set to true, to display 'January 2015', instead of 'january 2015'.
