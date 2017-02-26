@@ -197,7 +197,7 @@ class ArchivesExtension extends SimpleExtension
                 ->setCacheDuration(0)
                 ->setCallbackArguments([
                     'type'            => $widget['type'],
-                    'contenttypeslug' => $contentTypeName,
+                    'contentTypeName' => $contentTypeName,
                     'order'           => $widget['order'],
                     'label'           => $widget['label'],
                     'column'          => $widget['column'],
