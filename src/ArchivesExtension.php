@@ -161,10 +161,18 @@ class ArchivesExtension extends SimpleExtension
 
         $prefix = !empty($config['prefix']) ? $config['prefix'] : 'archives';
 
-        $collection
-            ->get('/' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
-            ->bind('archiveList')
-        ;
+        if($config['animaltranslation'] === true) {
+            $collection
+                ->get('/{_locale}' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
+                ->bind('archiveList')
+            ;
+        } else {
+            $collection
+                ->get('/' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
+                ->bind('archiveList')
+            ;                
+        }
+
     }
 
     /**
@@ -292,6 +300,7 @@ class ArchivesExtension extends SimpleExtension
                 'archiveList',
                 ['contenttypeslug' => $contentTypeName, 'period' => $row['year']]
             );
+            setlocale(LC_ALL, $app['request']->getLocale());
             $period = strftime($label, strtotime($row['year'] . '-01'));
             if ($config['ucwords'] === true) {
                 $period = ucwords($period);
