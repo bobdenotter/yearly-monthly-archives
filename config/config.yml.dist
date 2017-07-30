@@ -8,6 +8,9 @@ prefix: 'archives'
 # Set to true, to display 'January 2015', instead of 'january 2015'.
 ucwords: true
 
+# Set to true if you're using animal translation extension.
+animaltranslation: false
+
 # Set the column to use for filtering / sorting for specific contenttypes.
 columns:
     agenda: date_start
