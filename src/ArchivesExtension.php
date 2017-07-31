@@ -163,7 +163,7 @@ class ArchivesExtension extends SimpleExtension
 
         if($config['animaltranslation'] === true) {
             $collection
-                ->get('/{_locale}' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
+                ->get('/{_locale}/' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
                 ->bind('archiveList')
             ;
         } else {
