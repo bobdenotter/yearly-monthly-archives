@@ -161,7 +161,7 @@ class ArchivesExtension extends SimpleExtension
 
         $prefix = !empty($config['prefix']) ? $config['prefix'] : 'archives';
 
-        if($config['animaltranslation'] === true) {
+        if(isset($config['animaltranslation']) && $config['animaltranslation'] === true) {
             $collection
                 ->get('/{_locale}/' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
                 ->bind('archiveList')
