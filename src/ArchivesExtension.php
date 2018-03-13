@@ -128,7 +128,7 @@ class ArchivesExtension extends SimpleExtension
         // allows us to keep the sorting intact, as well as skip unpublished records.
         $records = $app['storage']->getContent($contentType['slug'], ['id' => implode(' || ', $ids)]);
         
-        if (count($records) === 1) {
+        if (!is_array($records) || count($records) === 1) {
             $records = [$records];
         }
 
