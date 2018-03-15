@@ -13,72 +13,23 @@ use Symfony\Component\HttpFoundation\Response;
 class ArchivesExtension extends SimpleExtension
 {
     /**
-     * @param string $type
-     * @param string $contentTypeName
-     * @param string $order
-     * @param string $label
-     * @param string $column
-     * @param string $header
-     *
-     * @return string|\Twig_Markup
+     * The string length needed for getting the year.
+     * E.g. 2018
      */
-    public function widget($type, $contentTypeName, $order, $label, $column, $header)
-    {
-        if ($type === 'monthly') {
-            if (empty($label)) {
-                $label = '%B %Y';
-            }
-            $html = $this->monthlyArchives($contentTypeName, $order, $label, $column);
-        } else {
-            if (empty($label)) {
-                $label = '%Y';
-            }
-            $html = $this->yearlyArchives($contentTypeName, $order, $label, $column);
-        }
-
-        if (!empty($header)) {
-            $html = sprintf("<h5>%s</h5>\n%s", $header, $html);
-        }
-
-        return $html;
-    }
+    const YEAR_LENGTH = 4;
 
     /**
-     * Yearly archives Twig function.
-     *
-     * @param string $contentTypeName
-     * @param string $order
-     * @param string $label
-     * @param string $column
-     *
-     * @return \Twig_Markup
+     * The string length needed for getting the month.
+     * E.g. 2018-03
      */
-    public function yearlyArchives($contentTypeName, $order = '', $label = '%Y', $column = '')
-    {
-        return $this->archiveHelper($contentTypeName, $order, 5, $label, $column);
-    }
-
-    /**
-     * Monthly archives Twig function.
-     *
-     * @param string $contentTypeName
-     * @param string $order
-     * @param string $label
-     * @param string $column
-     *
-     * @return \Twig_Markup
-     */
-    public function monthlyArchives($contentTypeName, $order = '', $label = '%B %Y', $column = '')
-    {
-        return $this->archiveHelper($contentTypeName, $order, 8, $label, $column);
-    }
+    const MONTH_LENGTH = 7;
 
     /**
      * Archive listing route.
      *
      * @param Application $app
-     * @param string      $contenttypeslug
-     * @param integer     $period
+     * @param string $contenttypeslug
+     * @param integer $period
      *
      * @return string
      */
@@ -88,7 +39,7 @@ class ArchivesExtension extends SimpleExtension
         $contentTypeName = $contenttypeslug;
         // Scrub, scrub.
         $period = preg_replace('/[^0-9-]+/', '', $period);
-        if (strlen($period) !== 4 && strlen($period) !== 7) {
+        if (strlen($period) !== static::YEAR_LENGTH && strlen($period) !== static::MONTH_LENGTH) {
             return 'Wrong period parameter';
         }
 
@@ -108,15 +59,14 @@ class ArchivesExtension extends SimpleExtension
 
         if (!empty($config['columns'][$contentTypeName])) {
             $column = $config['columns'][$contentTypeName];
-        } elseif (empty($column)) {
+        } else if (empty($column)) {
             $column = 'datepublish';
         }
 
         // Use a custom query to fetch the ids.
         $query = $repo->createQueryBuilder();
         $query
-            ->where($query->expr()->like($column, $query->expr()->literal($period . '%')));
-        ;
+            ->where($query->expr()->like($column, $query->expr()->literal($period . '%')));;
         //$records = $query->execute()->fetchAll() ?: [];
         $temp_ids = $query->execute()->fetchAll() ?: [];
         $ids = [];
@@ -127,7 +77,7 @@ class ArchivesExtension extends SimpleExtension
         // Fetch the records, based on the ids we gathered earlier. Doing it this way
         // allows us to keep the sorting intact, as well as skip unpublished records.
         $records = $app['storage']->getContent($contentType['slug'], ['id' => implode(' || ', $ids)]);
-        
+
         if (!is_array($records) || count($records) === 1) {
             $records = [$records];
         }
@@ -161,16 +111,14 @@ class ArchivesExtension extends SimpleExtension
 
         $prefix = !empty($config['prefix']) ? $config['prefix'] : 'archives';
 
-        if(isset($config['animaltranslation']) && $config['animaltranslation'] === true) {
+        if (isset($config['animaltranslation']) && $config['animaltranslation'] === true) {
             $collection
                 ->get('/{_locale}/' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
-                ->bind('archiveList')
-            ;
+                ->bind('archiveList');
         } else {
             $collection
                 ->get('/' . $prefix . '/{contenttypeslug}/{period}', [$this, 'archiveList'])
-                ->bind('archiveList')
-            ;                
+                ->bind('archiveList');
         }
 
     }
@@ -183,7 +131,7 @@ class ArchivesExtension extends SimpleExtension
         $widgets = [];
         $config = $this->getConfig();
 
-        foreach ((array) $config['widgets'] as $contentTypeName => $widget) {
+        foreach ((array)$config['widgets'] as $contentTypeName => $widget) {
             if (!isset($widget['label'])) {
                 $widget['label'] = '';
             }
@@ -221,16 +169,6 @@ class ArchivesExtension extends SimpleExtension
 
         return $widgets;
     }
-    /**
-     * {@inheritdoc}
-     */
-    protected function registerTwigFunctions()
-    {
-        return [
-            'yearly_archives'  => ['yearlyArchives',  ['is_safe' => ['html']]],
-            'monthly_archives' => ['monthlyArchives', ['is_safe' => ['html']]],
-        ];
-    }
 
     /**
      * {@inheritdoc}
@@ -246,25 +184,122 @@ class ArchivesExtension extends SimpleExtension
     }
 
     /**
+     * {@inheritdoc}
+     */
+    protected function registerTwigFunctions()
+    {
+        return [
+            'yearly_archives'  => ['yearlyArchives', ['is_safe' => ['html']]],
+            'monthly_archives' => ['monthlyArchives', ['is_safe' => ['html']]],
+        ];
+    }
+
+    /**
+     * @param string $type
      * @param string $contentTypeName
      * @param string $order
-     * @param int    $length
      * @param string $label
      * @param string $column
+     * @param string $header
+     * @param string $template
      *
-     * @return string|\Twig_Markup
+     * @return \Twig_Markup
      */
-    private function archiveHelper($contentTypeName, $order, $length, $label, $column)
+    public function widget($type, $contentTypeName, $order, $label, $column, $header, $template = 'archive-list.twig')
+    {
+        try {
+            $list = ($type === 'monthly') ?
+                $this->archiveListHelper($contentTypeName, $order, static::MONTH_LENGTH, $label === '' ? '%B %Y' : $label, $column) :
+                $this->archiveListHelper($contentTypeName, $order, static::YEAR_LENGTH, $label === '' ? '%Y' : $label, $column);
+        } catch (InvalidRepositoryException $e) {
+            return new \Twig_Markup('Not a valid ContentType', 'UTF-8');
+        }
+
+        return $this->renderList($list, $header, $template);
+    }
+
+
+    /**
+     * Passes the header and the list to the twig templated and renders it.
+     *
+     * @param $list
+     * @param $header
+     * @param string $template
+     *
+     * @return \Twig_Markup
+     */
+    private function renderList($list, $header, $template)
+    {
+        return new \Twig_Markup($this->renderTemplate($template, [
+            'header' => $header,
+            'list'   => $list
+        ]), 'UTF-8');
+    }
+
+    /**
+     * Yearly archives Twig function.
+     *
+     * @param string $contentTypeName
+     * @param string $order
+     * @param string $label
+     * @param string $column
+     * @param $template
+     *
+     * @return \Twig_Markup
+     */
+    public function yearlyArchives($contentTypeName, $order = '', $label = '%Y', $column = '', $template = 'archive-list-items.twig')
+    {
+        try {
+            $list = $this->archiveListHelper($contentTypeName, $order, static::YEAR_LENGTH, $label, $column);
+        } catch (InvalidRepositoryException $e) {
+            return new \Twig_Markup('Not a valid ContentType', 'UTF-8');
+        }
+
+        return $this->renderList($list, null, $template);
+    }
+
+    /**
+     * Monthly archives Twig function.
+     *
+     * @param string $contentTypeName
+     * @param string $order
+     * @param string $label
+     * @param string $column
+     * @param $template
+     *
+     * @return \Twig_Markup
+     */
+    public function monthlyArchives($contentTypeName, $order = '', $label = '%B %Y', $column = '', $template = 'archive-list-items.twig')
+    {
+        try {
+            $list = $this->archiveListHelper($contentTypeName, $order, static::MONTH_LENGTH, $label, $column);
+        } catch (InvalidRepositoryException $e) {
+            return new \Twig_Markup('Not a valid ContentType', 'UTF-8');
+        }
+
+        return $this->renderList($list, null, $template);
+    }
+
+
+    /**
+     * Generates a list of pairs. Each pair holds the period and the link.
+     *
+     * @param string $contentTypeName
+     * @param string $order
+     * @param int $length
+     * @param string $label
+     * @param string $column
+     * @throws InvalidRepositoryException
+     *
+     * @return array
+     */
+    private function archiveListHelper($contentTypeName, $order, $length, $label, $column)
     {
         $app = $this->getContainer();
         $config = $this->getConfig();
-        $output = '';
+        $output = [];
 
-        try {
-            $repo = $app['storage']->getRepository($contentTypeName);
-        } catch (InvalidRepositoryException $e) {
-            return 'Not a valid ContentType';
-        }
+        $repo = $app['storage']->getRepository($contentTypeName);
 
         if (strtolower($order) !== 'asc') {
             $order = 'desc';
@@ -272,7 +307,7 @@ class ArchivesExtension extends SimpleExtension
 
         if (!empty($config['columns'][$contentTypeName])) {
             $column = $config['columns'][$contentTypeName];
-        } elseif (empty($column)) {
+        } else if (empty($column)) {
             $column = 'datepublish';
         }
 
@@ -280,15 +315,15 @@ class ArchivesExtension extends SimpleExtension
         // MySql uses 1-indexed strings instead of 0-indexed strings. Make adjustments for their wonky implementation of SUBSTR(...)
         if ($app['db']->getDatabasePlatform() instanceof MySqlPlatform) {
             $index = 1;
-            $length -= 1;
+        } else {
+            $length += 1;
         }
 
         $query = $repo->createQueryBuilder();
         $query
             ->select("SUBSTR($column, $index, $length) as year")
             ->groupBy('year')
-            ->orderBy('year', $order)
-        ;
+            ->orderBy('year', $order);
         $rows = $query->execute()->fetchAll();
         foreach ($rows as $row) {
             // Don't print out links for records without dates.
@@ -306,9 +341,12 @@ class ArchivesExtension extends SimpleExtension
                 $period = ucwords($period);
             }
 
-            $output .= sprintf('<li><a href="%s">%s</a></li>%s', $link, $period, "\n");
+            $output[] = [
+                'link'   => $link,
+                'period' => $period
+            ];
         }
 
-        return new \Twig_Markup($output, 'UTF-8');
+        return $output;
     }
 }
