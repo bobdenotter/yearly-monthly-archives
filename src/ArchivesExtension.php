@@ -144,6 +144,9 @@ class ArchivesExtension extends SimpleExtension
             if (!isset($widget['header'])) {
                 $widget['header'] = '';
             }
+            if (!isset($widget['template'])) {
+                $widget['template'] = '';
+            }
 
             $widgetObj = new Widget();
             $widgetObj
@@ -158,6 +161,7 @@ class ArchivesExtension extends SimpleExtension
                     'label'           => $widget['label'],
                     'column'          => $widget['column'],
                     'header'          => $widget['header'],
+                    'template'        => $widget['template'],
                 ]);
 
             if (isset($widget['priority'])) {
@@ -205,7 +209,7 @@ class ArchivesExtension extends SimpleExtension
      *
      * @return \Twig_Markup
      */
-    public function widget($type, $contentTypeName, $order, $label, $column, $header, $template = 'archive-list.twig')
+    public function widget($type, $contentTypeName, $order, $label, $column, $header, $template)
     {
         try {
             $list = ($type === 'monthly') ?
@@ -215,7 +219,7 @@ class ArchivesExtension extends SimpleExtension
             return new \Twig_Markup('Not a valid ContentType', 'UTF-8');
         }
 
-        return $this->renderList($list, $header, $template);
+        return $this->renderList($list, $header, $template === '' ? 'archive-list.twig' : $template);
     }
 
 
