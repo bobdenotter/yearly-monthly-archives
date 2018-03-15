@@ -21,4 +21,5 @@ widgets:
     type: monthly
     priority: 100
     header: "Monthly archives"
+    # template: "my-archive-widget.twig" # The twig template that is used to render the widget.
 
